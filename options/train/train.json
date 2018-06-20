@@ -1,0 +1,76 @@
+{
+  "name":"SRGAN"
+  ,"exec_debug": true
+  ,"net_debug": false
+  ,"mode":"sr"
+  ,"scale": 4
+  ,"datasets": {
+    "train": {
+      "name": "DIV2K"
+      ,"mode": "LRHR"
+      ,"dataroot_HR": "pathto/data/DIV2K/DIV2K_train_HR_sub"
+      ,"dataroot_LR": "pathto/data/DIV2K/DIV2K_train_HR_sub_bicLRx4"
+      ,"n_workers": 8
+      ,"batch_size": 16
+      ,"HR_size": 128
+      ,"use_flip": true
+      ,"use_rot": true
+      ,"noise": "."
+    }
+    ,"val": {
+      "name": "val_set5"
+      ,"mode": "LRHR"
+      ,"dataroot_HR": "pathto/data/Set5_mod"
+      ,"dataroot_LR": "pathto/data/Set5_bicLRx4"
+    }
+  }
+  ,"networks": {
+    "G": {
+    "which_model": "d-dbpn"
+    ,"norm_type": "bn"
+    ,"mode": "NAC"
+    ,"num_features": 64
+    ,"num_blocks": 4
+    ,"in_channels": 3
+    ,"out_channels": 3
+    ,"group": 1
+    }
+    ,"D": {
+    "which_model": "vgg128"
+    ,"norm_type": "bn"
+    ,"act_type": "lrelu"
+    ,"mode": "CNA"
+    ,"num_features": 64
+    ,"in_channels": 3
+    }
+  }
+  ,"train": {
+    "lr_G": 1e-4
+    ,"weight_decay_G": 0
+    ,"beta1_G": 0.9
+    ,"lr_D": 1e-4
+    ,"weight_decay_D": 0
+    ,"beta1_D": 0.9
+    ,"lr_scheme": "MultiStepLR"
+    ,"lr_steps": [50000, 100000, 200000, 300000]
+    ,"lr_gamma": 0.5
+
+    ,"pixel_criterion": "l1"
+    ,"pixel_weight": 1.0
+    ,"feature_criterion": "l1"
+    ,"feature_weight": 1
+    ,"gan_type": "vanilla" 
+    ,"gan_weight": 5e-3
+
+    ,"D_update_ratio": 1
+    ,"D_init_iters": 0
+    ,"gp_weigth": 10
+
+    ,"manual_seed": 0
+    ,"num_epochs": 100
+    ,"log_step": 1
+    ,"val_step": 1
+    ,"resume": true
+    ,"resume_path": "pathto/super_resolution/experiments/D-DBPN_in3f64b4_x4/epoch"
+  }
+}

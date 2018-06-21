@@ -51,12 +51,17 @@ def parse(opt_path, is_train=True):
         exp_path = os.path.join(os.getcwd(), 'experiments', config_str)
 
     elif opt['mode'] == 'srgan':
+        # TODO: the pretrain_model and config_str need to be indentical
+        # TODO: the .json can combine with the pretrain_model
         config_str = '%s_%s_p%df%d_x%d'%(network_opt['G']['which_model'].upper(), network_opt['D']['which_model'].upper(), opt['train']['pixel_weight'],
                                                         opt['train']['feature_weight'], opt['scale'])
         exp_path = os.path.join(os.getcwd(), 'experiments', config_str)
 
     else:
         raise NotImplementedError("The mode [%s] of networks is not recognized." % opt['mode'])
+
+    if opt['train']['resume']:
+        exp_path = opt['train']['resume_path']
 
     path_opt['exp_root'] = exp_path
     path_opt['epoch'] = os.path.join(exp_path, 'epoch')

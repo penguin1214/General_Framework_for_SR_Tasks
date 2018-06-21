@@ -29,8 +29,8 @@ else:
 
 if opt['exec_debug']:
     NUM_EPOCH = 50
-    opt['datasets']['train']['dataroot_HR'] = '/pathto/data/DIV2K/DIV2K_train_HR_debug'
-    opt['datasets']['train']['dataroot_LR'] = 'pathto/data/DIV2K/DIV2K_train_LR_debug'
+    opt['datasets']['train']['dataroot_HR'] = '/home/ser606/ZhenLi/data/DIV2K/DIV2K_train_HR_debug'
+    opt['datasets']['train']['dataroot_LR'] = '/home/ser606/ZhenLi/data/DIV2K/DIV2K_train_LR_debug'
 else:
     NUM_EPOCH = int(opt['num_epochs'])
 
@@ -115,7 +115,7 @@ def main():
             start_time = time.time()
             solver.val_loss = 0.0
 
-            index = 0
+            index = 0   # TODO: better approach?
             visuals_list = []
 
             for iter, batch in enumerate(val_loader):
@@ -167,7 +167,8 @@ def main():
             solver.training_loss = training_results['training_loss'] / training_results['batch_size']
             solver.val_loss = val_results['val_loss'] / val_results['batch_size']
 
-            solver.tf_log(epoch)
+            # TODO: I haven't installed tensorflow, because I should install cuda 9.0 first
+            # solver.tf_log(epoch)
 
             # statistics
             if opt['mode'] == 'sr':
@@ -194,7 +195,7 @@ def main():
             , 'psnr': solver.results['psnr']
             , 'ssim': solver.results['ssim']
               },
-        index=range(1, NUM_EPOCH)
+        index=range(1, NUM_EPOCH+1)
     )
     data_frame.to_csv(os.path.join(solver.results_dir, 'train_results.csv'),
                       index_label='Epoch')

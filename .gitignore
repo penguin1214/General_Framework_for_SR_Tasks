@@ -3,6 +3,8 @@ __pycache__/
 results/
 experiments/
 *.pyc
+*.py~
+*.json~
 
 *.png
 *.jpg

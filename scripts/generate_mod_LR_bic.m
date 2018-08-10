@@ -2,14 +2,12 @@ function generate_mod_LR_bic()
 
 %% set parameters
 % comment the unnecessary line
-input_path = 'pathto/data/Set5';
-save_mod_path = 'pathto/data/Set5_mod';
-save_LR_path = 'pathto/data/Set5_bicLRx4';
+input_path = '/home/server606/SRdata/TestDataSR/Manga109';
+% save_mod_path = '/home/ser606/ZhenLi/BasicSR-master/data/Set5_mod';
+save_LR_path = '/home/server606/SRdata/TestDataSR/Manga109_LRx4';
 % save_bic_path = '';
 
 up_scale = 4;
-mod_scale = 8;
-
 
 if exist('save_mod_path', 'var')
     if exist(save_mod_path, 'dir')
@@ -48,14 +46,14 @@ for i = 1 : length(filepaths)
         % read image
         img = imread(fullfile(input_path, [imname, ext]));
         % modcrop
-        img = modcrop(img, mod_scale);
+        img = modcrop(img, up_scale);
         if exist('save_mod_path', 'var')
             imwrite(img, fullfile(save_mod_path, [imname, '.png']));
         end
         % LR
         im_LR = imresize(img, 1/up_scale, 'bicubic');
         if exist('save_LR_path', 'var')
-            imwrite(im_LR, fullfile(save_LR_path, [imname, '_bicLRx4.png']));
+            imwrite(im_LR, fullfile(save_LR_path, [imname, '_LRx4.png']));
         end
         %         im_B = double(im_B)/255;
         %         im_B = rgb2ycbcr(im_B);

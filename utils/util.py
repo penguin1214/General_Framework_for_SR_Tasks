@@ -1,12 +1,16 @@
-import os
+﻿import os
 import math
+import subprocess
 from datetime import datetime
 import numpy as np
 from PIL import Image
 from skimage.measure import compare_ssim
 
+import torch, gc
 from torchvision.utils import make_grid
 from torchvision.transforms import Compose, ToTensor, ToPILImage, CenterCrop, Resize
+
+from data.common import rgb2ycbcr
 
 ####################
 # miscellaneous
@@ -82,20 +86,74 @@ def display_transform():
         ToTensor()
 ])
 
+def quantize(img, rgb_range):
+    pixel_range = 255. / rgb_range
+    # return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+    return img.mul(pixel_range).clamp(0, 255).round()
 ####################
 # metric
 ####################
+"""
+Ours
 
-def psnr(img1, img2):
-    assert img1.dtype == img2.dtype == np.uint8, 'np.uint8 is supposed.'
-    img1 = img1.astype(np.float64)
-    img2 = img2.astype(np.float64)
+SSIM is a little different
+"""
+def calc_psnr(img1, img2):
+    img1 = rgb2ycbcr(img1).astype(np.float32)
+    img2 = rgb2ycbcr(img2).astype(np.float32)
     mse = np.mean((img1 - img2)**2)
     if mse == 0:
         return float('inf')
     return 20 * math.log10(255.0 / math.sqrt(mse))
 
+def calc_ssim(img1, img2):
+    img1 = rgb2ycbcr(img1).astype(np.float32)
+    img2 = rgb2ycbcr(img2).astype(np.float32)
+    return compare_ssim(img1, img2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False) # same as Wang et al. 2004
+    # return compare_ssim(img1, img2)
 
-def ssim(img1, img2, multichannel=False):
-    assert img1.dtype == img2.dtype == np.uint8, 'np.uint8 is supposed.'
-    return compare_ssim(img1, img2, multichannel=multichannel)
+####################
+# gpu debug
+####################
+
+def gpu_dbg_tensor_alloc():
+    for obj in gc.get_objects():
+        if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+            print(type(obj), obj.size())
+
+
+def gpu_dbg_mem_use():
+    """Get the current gpu usage.
+
+    Returns
+    -------
+    usage: dict
+        Keys are device ids as integers.
+        Values are memory usage as integers in MB.
+    """
+    nvsmi = 'C:/Program Files/NVIDIA Corporation/NVSMI/nvidia-smi.exe' if os.name=='nt' else 'nvidia-smi'
+    result = subprocess.check_output(
+        [
+            nvsmi, '--query-gpu=memory.used',
+            '--format=csv,nounits,noheader'
+        ], universal_newlines=True)
+    # Convert lines into a dictionary
+    gpu_memory = [int(x) for x in result.strip().split('\n')]
+    gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+    print(gpu_memory_map)
+    #return gpu_memory_map
+
+if __name__ == '__main__':
+    # read images
+    import numpy as np
+    from scipy import misc
+    img1 = misc.imread('/home/ruby/RCAN-master/RCAN_TestCode/HR/Set5/x2/woman_HR_x2.png')
+    img2 = misc.imread('/home/ruby/RCAN-master/RCAN_TestCode/SR/BI/RCAN/Set5/x2/woman_RCAN_x2.png')
+    crop_size = 2
+    crop_img1 = img1[crop_size:-crop_size, crop_size:-crop_size, :]
+    crop_img2 = img2[crop_size:-crop_size, crop_size:-crop_size, :]
+    psnr = calc_psnr(crop_img1, crop_img2)
+    ssim = calc_ssim(crop_img1, crop_img2)
+    print("PSNR is %f" % psnr)
+    print("SSIM is %f" % ssim)
+

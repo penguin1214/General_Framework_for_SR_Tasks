@@ -2,9 +2,11 @@ import math
 import torch
 import torch.nn as nn
 
+# TODO: carefully use *
 import models.modules.blocks as B
 
 class SRResNet(nn.Module):
+    # TODO: upscale_factor=3
     def __init__(self,in_channels, out_channels, num_features, num_blocks, upscale_factor=4, norm_type='bn', act_type='relu', mode='NAC', upsample_mode='upconv'):
         super(SRResNet, self).__init__()
 
@@ -22,9 +24,12 @@ class SRResNet(nn.Module):
 
         conv_hr = B.ConvBlock(num_features, out_channels, kernel_size=9, norm_type=None, act_type=None)
 
+        # TODO: dense connection
+        # TODO: Notice: We must unpack the residual blocks using ‘*’ before building a nn.Sequential
         self.network = B.sequential(feature_extract, B.ShortcutBlock(B.sequential(*res_blocks, conv_lr)), upsample_block, conv_hr)
 
     def forward(self, x):
+        # TODO: if batch size is 1, should unsqueeze(0), otherwise unexpected stride size error!
         return self.network(x)
 
 class DBPN(nn.Module):
@@ -62,6 +67,7 @@ class DBPN(nn.Module):
 
     def forward(self, x):
         return self.network(x)
+
 
 class D_DBPN(nn.Module):
     def __init__(self,in_channels, out_channels, num_features, bp_stages, upscale_factor=4, norm_type=None, act_type='prelu', mode='NAC', upsample_mode='upconv'):

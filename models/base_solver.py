@@ -7,6 +7,7 @@ from utils.tf_logger import Logger as TFLogger
 class BaseSolver(object):
     def __init__(self, opt):
         self.opt = opt
+        self.scale = opt['scale']
         self.save_dir = opt['path']['models']
         self.is_train = opt['is_train']
         self.use_gpu = torch.cuda.is_available()
@@ -16,17 +17,24 @@ class BaseSolver(object):
         self.log_dir = opt['path']['log']
         self.results_dir = opt['path']['results']
         self.vis_dir = opt['path']['vis']
+        self.test_sr_dir = os.path.join(self.results_dir, 'sr')
         self.tf_logger = TFLogger(self.log_dir)
         self.log_step = opt['train']['log_step']
         self.val_step = opt['train']['val_step']
         self.training_loss = 0.0
         self.val_loss = 0.0
         self.best_prec = 0.0
+        self.skip_threshold = opt['train']['skip_threshold']
+        self.last_epoch_loss = 1e8    # for skip threshold
+
+        # test
+        if not self.is_train:
+            self.model_pth = opt['train']['resume_path']
 
     def name(self):
         return 'BaseSolver'
 
-    def feed_data(self):
+    def feed_data(self, batch):
         pass
 
     def summary(self, input_size):
@@ -36,7 +44,16 @@ class BaseSolver(object):
     def train_step(self):
         pass
 
-    def test(self):
+    def validate(self, val_crop, crop_size):
+        pass
+
+    def test(self, use_chop):
+        pass
+
+    def _exact_crop_forward(self, upscale, crop_size):
+        pass
+
+    def _overlap_crop_forward(self, upscale):
         pass
 
     def save(self, epoch, is_best):
@@ -54,9 +71,12 @@ class BaseSolver(object):
     def current_learning_rate(self):
         pass
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, epoch):
         pass
 
     def tf_log(self, epoch):
         pass
 
+    # TODO:
+    # def save_network(self):
+    # def load_network(self):

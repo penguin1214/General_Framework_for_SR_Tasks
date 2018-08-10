@@ -23,6 +23,7 @@ def activation(act_type='relu', inplace=True, slope=0.2, n_prelu=1):
 
 
 def norm(n_feature, norm_type='bn'):
+    # TODO: instance_norm
     norm_type = norm_type.lower()
     layer = None
     if norm_type =='bn':
@@ -82,6 +83,16 @@ def ConvBlock(in_channels, out_channels, kernel_size, stride=1, dilation=1, bias
         act = activation(act_type, inplace=False) if act_type else None
         n = norm(in_channels, norm_type) if norm_type else None
         return sequential(n, act, p, conv)
+
+class MeanShift(nn.Conv2d):
+    def __init__(self, rgb_mean, rgb_std, sign=-1):
+        super(MeanShift, self).__init__(3, 3, kernel_size=1)
+        std = torch.Tensor(rgb_std)
+        self.weight.data = torch.eye(3).view(3, 3, 1, 1)
+        self.weight.data.div_(std.view(3, 1, 1, 1))
+        self.bias.data = sign * 255. * torch.Tensor(rgb_mean)
+        self.bias.data.div_(std)
+        self.requires_grad = False
 
 ################
 # Advanced blocks
@@ -263,6 +274,7 @@ class ConcatBlock(nn.Module):
 ################
 # Upsampler
 ################
+# TODO: does upsample conv need dilation?
 def UpsampleConvBlock(upscale_factor, in_channels, out_channels, kernel_size, stride, valid_padding=True, padding=0, bias=True,\
                  pad_type='zero', act_type='relu', norm_type=None, mode='nearest'):
     upsample = nn.Upsample(scale_factor=upscale_factor, mode=mode)
@@ -275,6 +287,7 @@ def PixelShuffleBlock():
     pass
 
 
+# TODO: do we still need valid_padding for deconv layers?
 def DeconvBlock(in_channels, out_channels, kernel_size, stride=1, dilation=1, bias=True, padding=0, \
                 act_type='relu', norm_type='bn', pad_type='zero', mode='CNA'):
     assert (mode in ['CNA', 'NAC']), '[ERROR] Wrong mode in [%s]!'%sys.modules[__name__]

@@ -1,4 +1,12 @@
-.vs/
 .idea/
-*.pyc
+__pycache__/
+results/
 experiments/
+*.pyc
+
+*.png
+*.jpg
+
+*.sln
+*.suo
+*.pyproj

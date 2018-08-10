@@ -2,6 +2,11 @@
 - 每次更改.json文件时别忘了更改options.py以及train.py文件（**Most Important**）
 
 ## Descriptions
+**name**:你自己定义的名字
+**exec_debug**： 表式执行的时候debug
+**net_debug**: 寻找一个合适的超参数
+**mode**: 'sr'表示只有生成器，‘srgan’表示有生成器和判别器
+**scale**: 上采样的倍数
 **datasets**： 
 
 分为两种phase： 
@@ -23,3 +28,5 @@ val -- 验证集图像
 - mode: 读取文件夹的方式。'LRHR'：从低分辨率图像文件夹和高分辨率图像文件夹中读取LR-HR的样本对 
 - dataroot_HR： 指定欲读取的高分辨率图像文件夹 
 - dataroot_LR： 指定欲读取的低分辨率图像文件夹 
+
+**networks**： 

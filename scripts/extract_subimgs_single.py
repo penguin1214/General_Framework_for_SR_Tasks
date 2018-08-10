@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 
 def main():
-    GT_dir = 'pathto/data/DIV2K/DIV2K_train_HR'
-    save_GT_dir = 'pathto/data/DIV2K/DIV2K_train_HR_sub'
+    GT_dir = '/home/server606/SRdata/DIV2K/DIV2K_train_HR'
+    save_GT_dir = '/home/server606/SRdata/DIV2K/DIV2K_train_HR_sub'
     n_thread = 20
 
     print('Parent process %s.' % os.getpid())

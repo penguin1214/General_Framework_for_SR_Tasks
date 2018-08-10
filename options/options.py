@@ -1,4 +1,4 @@
-import os
+﻿import os
 from collections import OrderedDict
 from datetime import datetime
 import json
@@ -8,7 +8,7 @@ def get_timestamp():
     return datetime.now().strftime('%y%m%d-%H%M%S')
 
 
-def parse(opt_path, is_train=True):
+def parse(opt_path):
     # remove comments starting with '//'
     json_str = ''
     with open(opt_path, 'r') as f:
@@ -18,25 +18,18 @@ def parse(opt_path, is_train=True):
     opt = json.loads(json_str, object_pairs_hook=OrderedDict)
 
     opt['timestamp'] = get_timestamp()
-    opt['is_train'] = is_train
     scale = opt['scale']
+    rgb_range = opt['rgb_range']
 
     # datasets
     for phase, dataset in opt['datasets'].items():
         phase = phase.split('_')[0]
         dataset['phase'] = phase
         dataset['scale'] = scale
-        is_lmdb = False
-        if dataset['dataroot_HR'] is not None:
-            if dataset['dataroot_HR'].endswith('lmdb'):
-                is_lmdb = True
-        if dataset['dataroot_LR'] is not None:
-            if dataset['dataroot_LR'].endswith('lmdb'):
-                is_lmdb = True
-        dataset['data_type'] = 'lmdb' if is_lmdb else 'img'
-
+        dataset['rgb_range'] = rgb_range
+        
     # for network initialize
-    if opt['mode'] == 'sr':
+    if opt['mode'] == 'sr' or opt['mode'] == 'sr_curriculum':
         opt['networks']['G']['scale'] = opt['scale']
     elif opt['mode'] == 'srgan':
         opt['networks']['G']['scale'] = opt['scale']
@@ -45,9 +38,9 @@ def parse(opt_path, is_train=True):
     network_opt = opt['networks']
     path_opt = OrderedDict()
 
-    if opt['mode'] == 'sr':
-        config_str = '%s_in%df%db%d_x%d'%(network_opt['G']['which_model'].upper(), network_opt['G']['in_channels'],
-                                                        network_opt['G']['num_features'], network_opt['G']['num_blocks'], opt['scale'])
+    if opt['mode'] == 'sr' or opt['mode'] == 'sr_curriculum':
+        config_str = '%s_in%df%d_x%d'%(network_opt['G']['which_model'].upper(), network_opt['G']['in_channels'],
+                                                        network_opt['G']['num_features'], opt['scale'])
         exp_path = os.path.join(os.getcwd(), 'experiments', config_str)
 
     elif opt['mode'] == 'srgan':

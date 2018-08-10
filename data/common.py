@@ -1,14 +1,18 @@
-import os
+﻿import os
 import math
 import pickle
-import lmdb
 import random
+
+import lmdb
 import numpy as np
-import torch
 import cv2
+import scipy.misc as misc
+from tqdm import tqdm
+
+import torch
 
 IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP']
-
+BINARY_EXTENSIONS = ['.npy']
 
 ####################
 # Files & IO
@@ -17,18 +21,19 @@ IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PP
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
+def is_binary_file(filename):
+    return any(filename.endswith(extension) for extension in BINARY_EXTENSIONS)
 
 def _get_paths_from_images(path):
-    assert os.path.isdir(path), '%s is not a valid directory' % path
+    assert os.path.isdir(path), '[%s] is not a valid directory' % path
     images = []
     for dirpath, _, fnames in sorted(os.walk(path)):
         for fname in sorted(fnames):
             if is_image_file(fname):
                 img_path = os.path.join(dirpath, fname)
                 images.append(img_path)
-    assert images, '%s has no valid image file' % path
+    assert images, '[%s] has no valid image file' % path
     return images
-
 
 def _get_paths_from_lmdb(dataroot):
     env = lmdb.open(dataroot, readonly=True, lock=False, readahead=False, meminit=False)
@@ -44,6 +49,15 @@ def _get_paths_from_lmdb(dataroot):
     paths = sorted([key for key in keys if not key.endswith('.meta')])
     return env, paths
 
+def _get_paths_from_binary(path):
+    assert os.path.isdir(path), '%s is not a valid directory' % path
+    files = []
+    for dirpath, _, fnames in sorted(os.walk(path)):
+        for fname in sorted(fnames):
+            if is_binary_file(fname):
+                binary_path = os.path.join(dirpath, fname)
+                files.append(binary_path)
+    return files
 
 def get_image_paths(data_type, dataroot):
     env, paths = None, None
@@ -52,9 +66,40 @@ def get_image_paths(data_type, dataroot):
             env, paths = _get_paths_from_lmdb(dataroot)
         elif data_type == 'img':
             paths = sorted(_get_paths_from_images(dataroot))
+        elif data_type.find('npy') >= 0 :
+            paths = sorted(_get_paths_from_binary(dataroot))
+            old_dirname = dataroot
+
+            if not paths:
+                #print('[%s] has no valid binary file' % dataroot)
+                new_dirname = dataroot + '_npy'
+                dataroot = new_dirname
+                #print('Path redirect to [%s]' % dataroot)
+
+            if data_type.find('reset') >= 0:
+                #print('Preparing seperated binary files in [%s]' % new_dirname)
+                img_paths = sorted(_get_paths_from_images(old_dirname))
+                if not os.path.exists(new_dirname):
+                    os.makedirs(new_dirname)
+                    path_bar = tqdm(img_paths)
+                    for v in path_bar:
+                        img = misc.imread(v)
+                        ext = os.path.splitext(os.path.basename(v))[-1]
+                        name_sep = os.path.basename(v.replace(ext, '.npy'))
+                        np.save(os.path.join(new_dirname, name_sep), img)
+                else:
+                    print("Binary file already exists, please confirm it in [%s]" % new_dirname)
+
+                #print('Path redirect to [%s]' % dataroot)
+
+            paths = sorted(_get_paths_from_binary(dataroot))
+            # paths = [v.replace(ext, '.npy') for v in paths]
+
         else:
             raise NotImplementedError("data_type [%s] is not recognized." % data_type)
     return env, paths
+    # TODO
+    # return env, paths, new_dirname
 
 
 def _read_lmdb_img(env, path):
@@ -66,33 +111,34 @@ def _read_lmdb_img(env, path):
     img = img_flat.reshape(H, W, C)
     return img
 
-
-def read_img(env, path):
+def read_img(env, path, data_type):
     # read image by cv2 or from lmdb
     # return: Numpy float32, HWC, BGR, [0,1]
-    if env is None: # img
-        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-    else:
+    if data_type == 'img':
+        img = misc.imread(path)
+    elif data_type.find('npy') >= 0:
+        img = np.load(path)
+    elif data_type == 'lmdb':
         img = _read_lmdb_img(env, path)
-    img = img.astype(np.float32)
-    #img = img.astype(np.float32) / 255.
+    else:
+        raise NotImplementedError
+    # img = img.astype(np.float32)
+    # img = img.astype(np.float32) / 255.
     if img.ndim == 2:
         img = np.expand_dims(img, axis=2)
     return img
-
-
 
 ####################
 # image processing
 # process on numpy image
 ####################
-def np2Tensor(l):
+def np2Tensor(l, rgb_range):
     def _np2Tensor(img):
-        if img.shape[2] == 3:
-            img = img[:, :, [2, 1, 0]]
+        # if img.shape[2] == 3: # for opencv imread
+        #     img = img[:, :, [2, 1, 0]]
         np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
         tensor = torch.from_numpy(np_transpose).float()
-        tensor.mul_(1. / 255)
+        tensor.mul_(rgb_range / 255.)
 
         return tensor
 
@@ -100,16 +146,24 @@ def np2Tensor(l):
 
 def get_patch(img_in, img_tar, patch_size, scale):
     ih, iw = img_in.shape[:2]
+    oh, ow = img_tar.shape[:2]
 
-    tp = patch_size
-    ip = tp // scale
+    ip = patch_size
 
-    ix = random.randrange(0, iw - ip + 1)
-    iy = random.randrange(0, ih - ip + 1)
-    tx, ty = scale * ix, scale * iy
+    if ih == oh:
+        tp = ip
+        ix = random.randrange(0, iw - ip + 1)
+        iy = random.randrange(0, ih - ip + 1)
+        tx, ty = ix, iy
+    else:
+        tp = ip * scale
+        ix = random.randrange(0, iw - ip + 1)
+        iy = random.randrange(0, ih - ip + 1)
+        tx, ty = scale * ix, scale * iy
 
     img_in = img_in[iy:iy + ip, ix:ix + ip, :]
     img_tar = img_tar[ty:ty + tp, tx:tx + tp, :]
+
 
     return img_in, img_tar
 
@@ -467,17 +521,3 @@ if __name__ == '__main__':
 
     import torchvision.utils
     torchvision.utils.save_image((rlt*255).round() / 255, 'rlt.png', nrow=1, padding=0, normalize=False)
-
-# matlab imresize(better use im2double before)
-# 1404*2040 (DIV2K, 0001.png)
-# x1/2: 0.109s, err 11, 0.028s
-# x1/3: 0.0800s, err 0, 0.0204s
-# x1/3.2: 0.0792s, err 68, 0.0202s
-# x1/4: 0.0630s, err 6, 0.0194s
-# x1/8: 0.0438s, err 0, 0.0152s
-# 256*256, butterfly (Set5)
-# x2: 0.0267s, err 3, 0.0094s
-# x3: 0.0497s, err 3, 0.0112s
-# x3.2: 0.0544s, err 9, 0.0109s
-# x4: 0.0777s, err 31, 0.0137s
-# x8: 0.287s, err 101, 0.0372s

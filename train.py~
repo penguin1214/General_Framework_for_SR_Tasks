@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import options.options as option
 from utils import util
-from models.SRModel import SRModel
+from models.SRModel import SRModel, SRModelCurriculum
 from data import create_dataloader
 from data import create_dataset
 
@@ -87,7 +87,7 @@ def main():
         solver.training_loss = 0.0
         epoch_loss_log = 0.0
 
-        if opt['mode'] == 'sr' :
+        if opt['mode'] == 'sr' or opt['mode'] == 'sr_curriculum':
             training_results = {'batch_size': 0, 'training_loss': 0.0}
         else:
             pass    # TODO
@@ -103,6 +103,10 @@ def main():
 
             if opt['mode'] == 'sr':
                 training_results['training_loss'] += iter_loss * batch_size
+                train_bar.set_description(desc='[%d/%d] Loss: %.4f ' % (
+                    epoch, NUM_EPOCH, iter_loss))
+            elif opt['mode'] == 'sr_curriculum':
+                training_results['training_loss'] += iter_loss.data * batch_size
                 train_bar.set_description(desc='[%d/%d] Loss: %.4f ' % (
                     epoch, NUM_EPOCH, iter_loss))
             else:
@@ -174,7 +178,7 @@ def main():
             solver.tf_log(epoch)
 
             # statistics
-            if opt['mode'] == 'sr' :
+            if opt['mode'] == 'sr' or opt['mode'] == 'sr_curriculum':
                 solver.results['training_loss'].append(solver.training_loss.cpu().data.item())
                 solver.results['val_loss'].append(solver.val_loss.cpu().data.item())
                 solver.results['psnr'].append(avg_psnr)

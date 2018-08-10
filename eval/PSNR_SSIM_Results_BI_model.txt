@@ -1,0 +1,36 @@
+**********************
+Method_1: RCAN; Set: Set5
+x4 1 baby_RCAN_x4.png: PSNR= 33.923662 SSIM= 0.894981
+x4 2 bird_RCAN_x4.png: PSNR= 35.869041 SSIM= 0.950801
+x4 3 butterfly_RCAN_x4.png: PSNR= 29.349184 SSIM= 0.933319
+x4 4 head_RCAN_x4.png: PSNR= 32.980313 SSIM= 0.797857
+x4 5 woman_RCAN_x4.png: PSNR= 30.931597 SSIM= 0.918764
+--------Mean--------
+x4: PSNR= 32.610760 SSIM= 0.899144
+**********************
+Method_2: rcan; Set: Set5
+x4 1 baby_rcan_x4.png: PSNR= 33.923014 SSIM= 0.894979
+x4 2 bird_rcan_x4.png: PSNR= 35.856544 SSIM= 0.950805
+x4 3 butterfly_rcan_x4.png: PSNR= 29.335517 SSIM= 0.933250
+x4 4 head_rcan_x4.png: PSNR= 32.967515 SSIM= 0.797657
+x4 5 woman_rcan_x4.png: PSNR= 30.922896 SSIM= 0.918706
+--------Mean--------
+x4: PSNR= 32.601097 SSIM= 0.899079
+**********************
+Method_3: feedback_f64t3u1s3; Set: Set5
+x4 1 baby_feedback_f64t3u1s3_x4.png: PSNR= 33.601183 SSIM= 0.890359
+x4 2 bird_feedback_f64t3u1s3_x4.png: PSNR= 34.936723 SSIM= 0.943584
+x4 3 butterfly_feedback_f64t3u1s3_x4.png: PSNR= 28.675520 SSIM= 0.925180
+x4 4 head_feedback_f64t3u1s3_x4.png: PSNR= 32.920538 SSIM= 0.795265
+x4 5 woman_feedback_f64t3u1s3_x4.png: PSNR= 30.483327 SSIM= 0.911924
+--------Mean--------
+x4: PSNR= 32.123458 SSIM= 0.893262
+**********************
+Method_4: d-dbpn; Set: Set5
+x4 1 baby_d-dbpn_x4.png: PSNR= 33.621789 SSIM= 0.890621
+x4 2 bird_d-dbpn_x4.png: PSNR= 34.936829 SSIM= 0.944057
+x4 3 butterfly_d-dbpn_x4.png: PSNR= 28.483026 SSIM= 0.922966
+x4 4 head_d-dbpn_x4.png: PSNR= 32.944120 SSIM= 0.796245
+x4 5 woman_d-dbpn_x4.png: PSNR= 30.270227 SSIM= 0.910771
+--------Mean--------
+x4: PSNR= 32.051198 SSIM= 0.892932

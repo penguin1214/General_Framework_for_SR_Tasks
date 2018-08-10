@@ -1,43 +1,21 @@
 This repository is developed by [@penguin1214](https://github.com/penguin1214) and [@Paper99](https://github.com/Paper99).
 
-Code structure is inspired by [pytorch-cyclegan](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) and [BasicSR](https://github.com/xinntao/BasicSR).
-
+Our super-resolution framework is built on [BasicSR](https://github.com/xinntao/BasicSR) / [EDSR-Pytorch](https://github.com/thstkdgus35/EDSR-PyTorch) / [RCAN](https://github.com/yulunzhang/RCAN) and tested on Ubuntu 14.04/16.04 environment and tested on Ubuntu 14.04/16.04 environment (Python3.6, PyTorch_0.4.0, CUDA9.0/8.0, cuDNN7/5.1) with NVIDIA GPUs
 ## Requirements
-- Python3
-- Pytorch
-- TensorFlow(for logging, not required.)
+- Python 3.6
+- Pytorch 0.4.0
+### Optional
+- TensorFlow (for better logging)
 
-## Descriptions:
-- 运行train.py所需要的**训练数据集**可在此处 [[link](https://pan.baidu.com/s/1n_iPkVP9GYUcp7Flp_sWrA)] 下载（建议debug时使用），该数据集146M，包含344张LR和HR的样本对。PS: 验证集需自己准备
+## Descriptions
+### Usage
+You should download some SR datasets firstly, for example:
+- training datasets: DIV2K (800 images for train, 100 images for validation/test). It can be downloaded from [official site](https://data.vision.ee.ethz.ch/cvl/DIV2K/);
+(If you just want to test our SR framework, you can download debug dataset from [here](https://pan.baidu.com/s/1n_iPkVP9GYUcp7Flp_sWrA))
+- testing datasets: Set5, Set14, Urban100, B100, Manga109; (The [download link](https://drive.google.com/drive/folders/1xyiuTr6ga6ni-yfTP7kyPHRmfBakWovo) is provided by [@yulunzhang](https://github.com/yulunzhang))
 
-## Code architecture:
--- data (对数据进行操作)  
+#### Train
 
--- datasets (存放数据集)  
--- DIV2K  
--- VOC2012
 
--- models (算法模块)  
-models.modules --> modules within networks
-    models.modules.blocks --> basic blocks    
-    models.modules.xxx_arch --> 特定网络的 building blocks 和 网络的完整结构
-models --> solver classes
-    models.base_model --> base class solver
-    models.networks --> utilitie
-
--- options (输入参数)  
--- train (训练参数)  
--- test (测试参数)  
-
--- experiments (存储结果)  
--- train (训练结果)  
--- test （测试结果）
-
--- scripts (运行脚本)  
-
--- utils (其它)  
-
--- tmp_deprecated (暂时弃用的文件)  
-
--- train.py（训练代码）  
+ 
 

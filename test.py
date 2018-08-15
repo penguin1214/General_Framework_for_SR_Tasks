@@ -60,12 +60,11 @@ def main():
     if 'state_dict' in model_dict.keys():
         solver.model.load_state_dict(model_dict['state_dict'])
     else:
-        if model_name == "rcan_ours":
-            new_model_dict = OrderedDict()
-            for key, value in model_dict.items():
-                new_key = 'module.'+key
-                new_model_dict[new_key] = value
-            model_dict = new_model_dict
+        new_model_dict = OrderedDict()
+        for key, value in model_dict.items():
+            new_key = 'module.'+key
+            new_model_dict[new_key] = value
+        model_dict = new_model_dict
 
         solver.model.load_state_dict(model_dict)
     print('=> Done.')

@@ -26,6 +26,7 @@ class BaseSolver(object):
         self.best_prec = 0.0
         self.skip_threshold = opt['train']['skip_threshold']
         self.last_epoch_loss = 1e8    # for skip threshold
+        self.use_curriculum = False
 
         # test
         if not self.is_train:
